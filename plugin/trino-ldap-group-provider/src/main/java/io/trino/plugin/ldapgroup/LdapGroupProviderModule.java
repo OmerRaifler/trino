@@ -16,6 +16,7 @@ package io.trino.plugin.ldapgroup;
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
 import io.airlift.configuration.AbstractConfigurationAwareModule;
+import io.trino.plugin.base.group.CachingGroupProviderModule;
 import io.trino.spi.security.GroupProvider;
 
 import static io.airlift.configuration.ConditionalModule.conditionalModule;
@@ -28,15 +29,16 @@ public class LdapGroupProviderModule
     protected void setup(Binder binder)
     {
         configBinder(binder).bindConfig(LdapGroupProviderConfig.class);
-        binder.bind(GroupProvider.class).to(LdapGroupProvider.class).in(Scopes.SINGLETON);
         install(conditionalModule(
                 LdapGroupProviderConfig.class,
-                config -> config.getLdapUserMemberOfAttribute() != null,
-                innerBinder -> innerBinder.bind(LdapGroupProviderClient.class).to(LdapGroupProviderSimpleClient.class).in(Scopes.SINGLETON),
+                LdapGroupProviderConfig::getLdapUseGroupFilter,
                 innerBinder -> {
-                    configBinder(innerBinder).bindConfig(LdapGroupProviderFilteringClientConfig.class);
-                    innerBinder.bind(LdapGroupProviderClient.class).annotatedWith(ForLdapUserSearchDelegate.class).to(LdapGroupProviderSimpleClient.class).in(Scopes.SINGLETON);
-                    innerBinder.bind(LdapGroupProviderClient.class).to(LdapGroupProviderFilteringClient.class).in(Scopes.SINGLETON);
+                    configBinder(innerBinder).bindConfig(LdapFilteringGroupProviderConfig.class);
+                    innerBinder.bind(GroupProvider.class).annotatedWith(CachingGroupProviderModule.ForCachingGroupProvider.class).to(LdapFilteringGroupProvider.class).in(Scopes.SINGLETON);
+                },
+                innerBinder -> {
+                    configBinder(binder).bindConfig(LdapSingleQueryGroupProviderConfig.class);
+                    innerBinder.bind(GroupProvider.class).annotatedWith(CachingGroupProviderModule.ForCachingGroupProvider.class).to(LdapSingleQueryGroupProvider.class).in(Scopes.SINGLETON);
                 }));
     }
 }

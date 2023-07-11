@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.ldapgroup;
+package io.trino.plugin.base.group;
 
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
@@ -22,29 +22,22 @@ import static io.airlift.configuration.testing.ConfigAssertions.assertFullMappin
 import static io.airlift.configuration.testing.ConfigAssertions.assertRecordedDefaults;
 import static io.airlift.configuration.testing.ConfigAssertions.recordDefaults;
 
-public class TestLdapGroupProviderFilteringClientConfig
+public class TestGroupProviderConfig
 {
     @Test
     public void testDefaults()
     {
-        assertRecordedDefaults(recordDefaults(LdapGroupProviderFilteringClientConfig.class)
-                .setLdapGroupBaseDN(null)
-                .setLdapGroupsSearchFilter(null)
-                .setLdapGroupsSearchMemberAttribute("member"));
+        assertRecordedDefaults(recordDefaults(GroupProviderConfig.class)
+                .setCachingEnabled(false));
     }
 
     @Test
-    public void testExplicitPropertyMapping()
+    public void testExplicitPropertyMappings()
     {
-        Map<String, String> properties = ImmutableMap.of(
-                "ldap.group-base-dn", "ou=group,dc=trino,dc=io",
-                "ldap.group-search-filter", "(cn=dev*)",
-                "ldap.group-search-member-attribute", "memberUser");
+        Map<String, String> properties = ImmutableMap.of("cache.enabled", "true");
 
-        LdapGroupProviderFilteringClientConfig expected = new LdapGroupProviderFilteringClientConfig()
-                .setLdapGroupBaseDN("ou=group,dc=trino,dc=io")
-                .setLdapGroupsSearchFilter("(cn=dev*)")
-                .setLdapGroupsSearchMemberAttribute("memberUser");
+        GroupProviderConfig expected = new GroupProviderConfig()
+                .setCachingEnabled(true);
 
         assertFullMapping(properties, expected);
     }

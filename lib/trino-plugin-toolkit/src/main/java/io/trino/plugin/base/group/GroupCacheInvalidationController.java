@@ -11,20 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.ldapgroup;
+package io.trino.plugin.base.group;
 
-import com.google.common.collect.ImmutableMap;
-
-import java.util.List;
-import java.util.Map;
-
-import static java.util.Objects.requireNonNull;
-
-public record LdapSearchUserResult(String userDN, Map<String, List<String>> userAttributes)
+public interface GroupCacheInvalidationController
 {
-    public LdapSearchUserResult(String userDN, Map<String, List<String>> userAttributes)
-    {
-        this.userDN = requireNonNull(userDN, "userDN is null");
-        this.userAttributes = ImmutableMap.copyOf(requireNonNull(userAttributes, "userAttributes is null"));
-    }
+    void invalidate(String user);
+
+    void invalidateAll();
 }

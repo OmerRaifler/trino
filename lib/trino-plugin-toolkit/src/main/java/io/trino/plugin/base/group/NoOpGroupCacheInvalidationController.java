@@ -11,18 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.ldapgroup;
+package io.trino.plugin.base.group;
 
-import javax.naming.NamingException;
-
-import java.util.List;
-import java.util.Optional;
-
-public interface LdapGroupProviderClient
+public class NoOpGroupCacheInvalidationController
+        implements GroupCacheInvalidationController
 {
-    Optional<LdapSearchUserResult> getUser(String user)
-            throws NamingException;
+    @Override
+    public void invalidate(String user) {}
 
-    List<String> getGroups(LdapSearchUserResult searchUserResult)
-            throws NamingException;
+    @Override
+    public void invalidateAll() {}
 }

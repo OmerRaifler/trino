@@ -11,21 +11,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.ldapgroup;
+package io.trino.plugin.base.group;
 
-import jakarta.inject.Qualifier;
+import io.airlift.configuration.Config;
+import io.airlift.configuration.ConfigDescription;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-@Qualifier
-@Target({ FIELD, PARAMETER, METHOD })
-@Retention(RUNTIME)
-public @interface ForLdapUserSearchDelegate
+public class GroupProviderConfig
 {
+    private boolean isCachingEnabled;
+
+    public boolean isCachingEnabled()
+    {
+        return isCachingEnabled;
+    }
+
+    @Config("cache.enabled")
+    @ConfigDescription("Enables caching for the group provider")
+    public GroupProviderConfig setCachingEnabled(boolean isCachingEnabled)
+    {
+        this.isCachingEnabled = isCachingEnabled;
+        return this;
+    }
 }
