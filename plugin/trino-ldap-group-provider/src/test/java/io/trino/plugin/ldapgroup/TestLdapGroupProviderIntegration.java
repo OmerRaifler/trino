@@ -22,6 +22,7 @@ import io.trino.spi.security.GroupProvider;
 import io.trino.testing.containers.TestingOpenLdapServer;
 import io.trino.testing.containers.TestingOpenLdapServer.DisposableSubContext;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.parallel.Execution;
@@ -50,16 +51,16 @@ public class TestLdapGroupProviderIntegration
 {
     private final LdapGroupProviderFactory factory = new LdapGroupProviderFactory();
 
-    private final Closer closer;
+    private Closer closer;
 
-    private final Map<String, String> baseConfig;
+    private Map<String, String> baseConfig;
 
-    private final DisposableSubContext clients;
-    private final DisposableSubContext developers;
-    private final DisposableSubContext qa;
+    private DisposableSubContext clients;
+    private DisposableSubContext developers;
+    private DisposableSubContext qa;
 
-    public TestLdapGroupProviderIntegration()
-            throws Exception
+    @BeforeAll
+    public void setup() throws Exception
     {
         closer = Closer.create();
         Network network = Network.newNetwork();
