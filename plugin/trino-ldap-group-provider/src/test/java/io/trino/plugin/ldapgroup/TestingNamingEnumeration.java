@@ -23,16 +23,16 @@ import java.util.List;
 public final class TestingNamingEnumeration<T>
         implements NamingEnumeration<T>
 {
-    private final Iterator<T> iter;
+    private final Iterator<T> iterator;
 
     private TestingNamingEnumeration(List<T> items)
     {
-        this.iter = items.iterator();
+        this.iterator = items.iterator();
     }
 
     private TestingNamingEnumeration()
     {
-        this.iter = Collections.emptyIterator();
+        this.iterator = Collections.emptyIterator();
     }
 
     public static <V> TestingNamingEnumeration<V> of()
@@ -49,13 +49,13 @@ public final class TestingNamingEnumeration<T>
     @Override
     public T next()
     {
-        return iter.next();
+        return iterator.next();
     }
 
     @Override
     public boolean hasMore()
     {
-        return iter.hasNext();
+        return iterator.hasNext();
     }
 
     @Override
@@ -65,12 +65,12 @@ public final class TestingNamingEnumeration<T>
     @Override
     public boolean hasMoreElements()
     {
-        return iter.hasNext();
+        return iterator.hasNext();
     }
 
     @Override
     public T nextElement()
     {
-        return iter.next();
+        return iterator.next();
     }
 }
