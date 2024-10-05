@@ -117,9 +117,16 @@ public class TestLdapGroupProviderIntegration
         assertThat(groups).containsAll(expectedGroups);
     }
 
-    @ParameterizedTest
-    @MethodSource("provideForTestGetGroupsWithGroupsFilter")
-    public void testGetGroupsWithGroupsFilter(String userName, String groupFiler, Set<String> expectedGroups)
+    @Test
+    public void testGetGroupsWithGroupsFilter()
+    {
+        assertGetGroupsWithGroupsFilter("alicea", "cn=*", ImmutableSet.of("clients", "developers", "qa"));
+        assertGetGroupsWithGroupsFilter("alicea", "cn=dev*", ImmutableSet.of("developers"));
+        assertGetGroupsWithGroupsFilter("alicea", "(|(cn=dev*)(cn=cl*))", ImmutableSet.of("developers", "clients"));
+        assertGetGroupsWithGroupsFilter("alicea", "(&(objectclass=groupOfNames)(!(ou:dn:=external)))", ImmutableSet.of("developers", "qa"));
+    }
+
+    private void assertGetGroupsWithGroupsFilter(String userName, String groupFiler, Set<String> expectedGroups)
     {
         Map<String, String> config = ImmutableMap.<String, String>builder()
                 .putAll(baseConfig)
@@ -254,15 +261,6 @@ public class TestLdapGroupProviderIntegration
                 Arguments.of("johnb", ImmutableSet.of("clients")),
                 Arguments.of("bobq", ImmutableSet.of("qa")),
                 Arguments.of("carlp", ImmutableSet.of())));
-    }
-
-    private static Stream<Arguments> provideForTestGetGroupsWithGroupsFilter()
-    {
-        return Stream.of(
-                Arguments.of("alicea", "cn=*", ImmutableSet.of("clients", "developers", "qa")),
-                Arguments.of("alicea", "cn=dev*", ImmutableSet.of("developers")),
-                Arguments.of("alicea", "(|(cn=dev*)(cn=cl*))", ImmutableSet.of("developers", "clients")),
-                Arguments.of("alicea", "(&(objectclass=groupOfNames)(!(ou:dn:=external)))", ImmutableSet.of("developers", "qa")));
     }
 
     @FunctionalInterface
