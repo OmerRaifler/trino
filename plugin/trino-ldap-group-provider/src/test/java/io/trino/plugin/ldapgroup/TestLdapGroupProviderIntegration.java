@@ -143,9 +143,30 @@ public class TestLdapGroupProviderIntegration
         assertThat(groups).containsAll(expectedGroups);
     }
 
-    @ParameterizedTest
-    @MethodSource("provideConfigBuilders")
-    public void testGetGroupForMissingUserReturnsEmpty(ConfigBuilder configBuilder)
+    @Test
+    public void testGetGroupForMissingUserReturnsEmpty()
+    {
+        assertGetGroupForMissingUserReturnsEmpty(builder -> builder
+                .put("cache.enabled", "false")
+                .put("ldap.user-member-of-attribute", "memberOf"));
+        assertGetGroupForMissingUserReturnsEmpty(builder -> builder
+                .put("cache.enabled", "false")
+                .put("ldap.use-group-filter", "true")
+                .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"));
+        assertGetGroupForMissingUserReturnsEmpty(builder -> builder
+                .put("cache.enabled", "true")
+                .put("cache.ttl", "5s")
+                .put("cache.maximum-size", "10")
+                .put("ldap.user-member-of-attribute", "memberOf"));
+        assertGetGroupForMissingUserReturnsEmpty(builder -> builder
+                .put("cache.enabled", "true")
+                .put("cache.ttl", "5s")
+                .put("cache.maximum-size", "10")
+                .put("ldap.use-group-filter", "true")
+                .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"));
+    }
+
+    private void assertGetGroupForMissingUserReturnsEmpty(ConfigBuilder configBuilder)
     {
         Map<String, String> config = configBuilder.apply(
                 ImmutableMap.<String, String>builder()
