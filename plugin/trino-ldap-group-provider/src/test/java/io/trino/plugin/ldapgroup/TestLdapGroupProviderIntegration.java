@@ -380,41 +380,6 @@ public class TestLdapGroupProviderIntegration
         latch.await();
     }
 
-    private static Stream<Arguments> combineArgumentStreams(Stream<Arguments> left, Stream<Arguments> right)
-    {
-        List<Arguments> rightArguments = right.collect(toImmutableList());
-        return left.flatMap(l -> rightArguments.stream().map(r -> () -> ObjectArrays.concat(l.get(), r.get(), Object.class)));
-    }
-
-    private static Stream<Arguments> provideConfigBuilders()
-    {
-        Stream<ConfigBuilder> cachingConfigBuilder = Stream.of(
-                (builder) -> builder.put("cache.enabled", "false"),
-                (builder) -> builder.put("cache.enabled", "true")
-                        .put("cache.ttl", "5s")
-                        .put("cache.maximum-size", "10"));
-
-        List<ConfigBuilder> groupProviderConfigBuilders = ImmutableList.of(
-                (builder) -> builder.put("ldap.user-member-of-attribute", "memberOf"),
-                (builder) -> builder.put("ldap.use-group-filter", "true").put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"));
-
-        return cachingConfigBuilder
-                .flatMap(cacheConfig -> groupProviderConfigBuilders
-                        .stream()
-                        .map(groupProviderConfig ->
-                                (ConfigBuilder) builder -> cacheConfig.apply(groupProviderConfig.apply(builder))))
-                .map(Arguments::of);
-    }
-
-    private static Stream<Arguments> provideUsersAndExpectedGroups()
-    {
-        return combineArgumentStreams(provideConfigBuilders(), Stream.of(
-                Arguments.of("alicea", ImmutableSet.of("clients", "developers", "qa")),
-                Arguments.of("johnb", ImmutableSet.of("clients")),
-                Arguments.of("bobq", ImmutableSet.of("qa")),
-                Arguments.of("carlp", ImmutableSet.of())));
-    }
-
     @FunctionalInterface
     public interface ConfigBuilder
     {
