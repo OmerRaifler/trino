@@ -232,9 +232,29 @@ public class TestLdapGroupProviderIntegration
         assertThat(groups).containsAll(ImmutableSet.of(clients.getDistinguishedName(), developers.getDistinguishedName(), qa.getDistinguishedName()));
     }
 
-    @ParameterizedTest
-    @MethodSource("provideConfigBuilders")
-    public void testGetGroupsConcurrently(ConfigBuilder configBuilder)
+    @Test
+    public void testGetGroupsConcurrently() throws InterruptedException {
+        assertGetGroupsConcurrently(builder -> builder
+                .put("cache.enabled", "false")
+                .put("ldap.user-member-of-attribute", "memberOf"));
+        assertGetGroupsConcurrently(builder -> builder
+                .put("cache.enabled", "false")
+                .put("ldap.use-group-filter", "true")
+                .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"));
+        assertGetGroupsConcurrently(builder -> builder
+                .put("cache.enabled", "true")
+                .put("cache.ttl", "5s")
+                .put("cache.maximum-size", "10")
+                .put("ldap.user-member-of-attribute", "memberOf"));
+        assertGetGroupsConcurrently(builder -> builder
+                .put("cache.enabled", "true")
+                .put("cache.ttl", "5s")
+                .put("cache.maximum-size", "10")
+                .put("ldap.use-group-filter", "true")
+                .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"));
+    }
+
+    private void assertGetGroupsConcurrently(ConfigBuilder configBuilder)
             throws InterruptedException
     {
         Map<String, String> config = configBuilder.apply(
