@@ -55,6 +55,28 @@ public class TestLdapGroupProviderIntegration
 
     private Map<String, String> baseConfig;
 
+    ConfigBuilder cacheDisabledWithMemberOf = builder -> builder
+            .put("cache.enabled", "false")
+            .put("ldap.user-member-of-attribute", "memberOf");
+
+    ConfigBuilder cacheDisabledWithGroupFilter = builder -> builder
+            .put("cache.enabled", "false")
+            .put("ldap.use-group-filter", "true")
+            .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com");
+
+    ConfigBuilder cacheEnabledWithMemberOf = builder -> builder
+            .put("cache.enabled", "true")
+            .put("cache.ttl", "5s")
+            .put("cache.maximum-size", "10")
+            .put("ldap.user-member-of-attribute", "memberOf");
+
+    ConfigBuilder cacheEnabledWithGroupFilter = builder -> builder
+            .put("cache.enabled", "true")
+            .put("cache.ttl", "5s")
+            .put("cache.maximum-size", "10")
+            .put("ldap.use-group-filter", "true")
+            .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com");
+
     private DisposableSubContext clients;
     private DisposableSubContext developers;
     private DisposableSubContext qa;
@@ -108,94 +130,22 @@ public class TestLdapGroupProviderIntegration
     @Test
     public void testGetGroups()
     {
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "false")
-                        .put("ldap.user-member-of-attribute", "memberOf"),
-                "alicea", ImmutableSet.of("clients", "developers", "qa"));
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "false")
-                        .put("ldap.user-member-of-attribute", "memberOf"),
-                "johnb", ImmutableSet.of("clients"));
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "false")
-                        .put("ldap.user-member-of-attribute", "memberOf"),
-                "bobq", ImmutableSet.of("qa"));
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "false")
-                        .put("ldap.user-member-of-attribute", "memberOf"),
-                "carlp", ImmutableSet.of());
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "false")
-                        .put("ldap.use-group-filter", "true")
-                        .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"),
-                "alicea", ImmutableSet.of("clients", "developers", "qa"));
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "false")
-                        .put("ldap.use-group-filter", "true")
-                        .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"),
-                "johnb", ImmutableSet.of("clients"));
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "false")
-                        .put("ldap.use-group-filter", "true")
-                        .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"),
-                "bobq", ImmutableSet.of("qa"));
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "false")
-                        .put("ldap.use-group-filter", "true")
-                        .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"),
-                "carlp", ImmutableSet.of());
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "true")
-                        .put("cache.ttl", "5s")
-                        .put("cache.maximum-size", "10")
-                        .put("ldap.user-member-of-attribute", "memberOf"),
-                "alicea", ImmutableSet.of("clients", "developers", "qa"));
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "true")
-                        .put("cache.ttl", "5s")
-                        .put("cache.maximum-size", "10")
-                        .put("ldap.user-member-of-attribute", "memberOf"),
-                "johnb", ImmutableSet.of("clients"));
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "true")
-                        .put("cache.ttl", "5s")
-                        .put("cache.maximum-size", "10")
-                        .put("ldap.user-member-of-attribute", "memberOf"),
-                "bobq", ImmutableSet.of("qa"));
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "true")
-                        .put("cache.ttl", "5s")
-                        .put("cache.maximum-size", "10")
-                        .put("ldap.user-member-of-attribute", "memberOf"),
-                "carlp", ImmutableSet.of());
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "true")
-                        .put("cache.ttl", "5s")
-                        .put("cache.maximum-size", "10")
-                        .put("ldap.use-group-filter", "true")
-                        .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"),
-                "alicea", ImmutableSet.of("clients", "developers", "qa"));
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "true")
-                        .put("cache.ttl", "5s")
-                        .put("cache.maximum-size", "10")
-                        .put("ldap.use-group-filter", "true")
-                        .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"),
-                "johnb", ImmutableSet.of("clients"));
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "true")
-                        .put("cache.ttl", "5s")
-                        .put("cache.maximum-size", "10")
-                        .put("ldap.use-group-filter", "true")
-                        .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"),
-                "bobq", ImmutableSet.of("qa"));
-        assertGetGroups(builder -> builder
-                        .put("cache.enabled", "true")
-                        .put("cache.ttl", "5s")
-                        .put("cache.maximum-size", "10")
-                        .put("ldap.use-group-filter", "true")
-                        .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"),
-                "carlp", ImmutableSet.of());
+        assertGetGroups(cacheDisabledWithMemberOf, "alicea", ImmutableSet.of("clients", "developers", "qa"));
+        assertGetGroups(cacheDisabledWithMemberOf, "johnb", ImmutableSet.of("clients"));
+        assertGetGroups(cacheDisabledWithMemberOf, "bobq", ImmutableSet.of("qa"));
+        assertGetGroups(cacheDisabledWithMemberOf, "carlp", ImmutableSet.of());
+        assertGetGroups(cacheDisabledWithGroupFilter, "alicea", ImmutableSet.of("clients", "developers", "qa"));
+        assertGetGroups(cacheDisabledWithGroupFilter, "johnb", ImmutableSet.of("clients"));
+        assertGetGroups(cacheDisabledWithGroupFilter, "bobq", ImmutableSet.of("qa"));
+        assertGetGroups(cacheDisabledWithGroupFilter, "carlp", ImmutableSet.of());
+        assertGetGroups(cacheEnabledWithMemberOf, "alicea", ImmutableSet.of("clients", "developers", "qa"));
+        assertGetGroups(cacheEnabledWithMemberOf, "johnb", ImmutableSet.of("clients"));
+        assertGetGroups(cacheEnabledWithMemberOf, "bobq", ImmutableSet.of("qa"));
+        assertGetGroups(cacheEnabledWithMemberOf, "carlp", ImmutableSet.of());
+        assertGetGroups(cacheEnabledWithGroupFilter, "alicea", ImmutableSet.of("clients", "developers", "qa"));
+        assertGetGroups(cacheEnabledWithGroupFilter, "johnb", ImmutableSet.of("clients"));
+        assertGetGroups(cacheEnabledWithGroupFilter, "bobq", ImmutableSet.of("qa"));
+        assertGetGroups(cacheEnabledWithGroupFilter, "carlp", ImmutableSet.of());
     }
 
     private void assertGetGroups(ConfigBuilder configBuilder, String userName, Set<String> expectedGroups)
@@ -237,24 +187,10 @@ public class TestLdapGroupProviderIntegration
     @Test
     public void testGetGroupForMissingUserReturnsEmpty()
     {
-        assertGetGroupForMissingUserReturnsEmpty(builder -> builder
-                .put("cache.enabled", "false")
-                .put("ldap.user-member-of-attribute", "memberOf"));
-        assertGetGroupForMissingUserReturnsEmpty(builder -> builder
-                .put("cache.enabled", "false")
-                .put("ldap.use-group-filter", "true")
-                .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"));
-        assertGetGroupForMissingUserReturnsEmpty(builder -> builder
-                .put("cache.enabled", "true")
-                .put("cache.ttl", "5s")
-                .put("cache.maximum-size", "10")
-                .put("ldap.user-member-of-attribute", "memberOf"));
-        assertGetGroupForMissingUserReturnsEmpty(builder -> builder
-                .put("cache.enabled", "true")
-                .put("cache.ttl", "5s")
-                .put("cache.maximum-size", "10")
-                .put("ldap.use-group-filter", "true")
-                .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"));
+        assertGetGroupForMissingUserReturnsEmpty(cacheEnabledWithMemberOf);
+        assertGetGroupForMissingUserReturnsEmpty(cacheDisabledWithGroupFilter);
+        assertGetGroupForMissingUserReturnsEmpty(cacheEnabledWithMemberOf);
+        assertGetGroupForMissingUserReturnsEmpty(cacheEnabledWithGroupFilter);
     }
 
     private void assertGetGroupForMissingUserReturnsEmpty(ConfigBuilder configBuilder)
@@ -289,24 +225,10 @@ public class TestLdapGroupProviderIntegration
 
     @Test
     public void testGetGroupsWithBadGroupNameReturnsFullName() {
-        assertGetGroupsWithBadGroupNameReturnsFullName(builder -> builder
-                .put("cache.enabled", "false")
-                .put("ldap.user-member-of-attribute", "memberOf"));
-        assertGetGroupsWithBadGroupNameReturnsFullName(builder -> builder
-                .put("cache.enabled", "false")
-                .put("ldap.use-group-filter", "true")
-                .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"));
-        assertGetGroupsWithBadGroupNameReturnsFullName(builder -> builder
-                .put("cache.enabled", "true")
-                .put("cache.ttl", "5s")
-                .put("cache.maximum-size", "10")
-                .put("ldap.user-member-of-attribute", "memberOf"));
-        assertGetGroupsWithBadGroupNameReturnsFullName(builder -> builder
-                .put("cache.enabled", "true")
-                .put("cache.ttl", "5s")
-                .put("cache.maximum-size", "10")
-                .put("ldap.use-group-filter", "true")
-                .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"));
+        assertGetGroupsWithBadGroupNameReturnsFullName(cacheDisabledWithMemberOf);
+        assertGetGroupsWithBadGroupNameReturnsFullName(cacheDisabledWithGroupFilter);
+        assertGetGroupsWithBadGroupNameReturnsFullName(cacheEnabledWithMemberOf);
+        assertGetGroupsWithBadGroupNameReturnsFullName(cacheEnabledWithGroupFilter);
     }
 
     private void assertGetGroupsWithBadGroupNameReturnsFullName(ConfigBuilder configBuilder)
@@ -325,24 +247,10 @@ public class TestLdapGroupProviderIntegration
 
     @Test
     public void testGetGroupsConcurrently() throws InterruptedException {
-        assertGetGroupsConcurrently(builder -> builder
-                .put("cache.enabled", "false")
-                .put("ldap.user-member-of-attribute", "memberOf"));
-        assertGetGroupsConcurrently(builder -> builder
-                .put("cache.enabled", "false")
-                .put("ldap.use-group-filter", "true")
-                .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"));
-        assertGetGroupsConcurrently(builder -> builder
-                .put("cache.enabled", "true")
-                .put("cache.ttl", "5s")
-                .put("cache.maximum-size", "10")
-                .put("ldap.user-member-of-attribute", "memberOf"));
-        assertGetGroupsConcurrently(builder -> builder
-                .put("cache.enabled", "true")
-                .put("cache.ttl", "5s")
-                .put("cache.maximum-size", "10")
-                .put("ldap.use-group-filter", "true")
-                .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com"));
+        assertGetGroupsConcurrently(cacheDisabledWithMemberOf);
+        assertGetGroupsConcurrently(cacheDisabledWithGroupFilter);
+        assertGetGroupsConcurrently(cacheEnabledWithMemberOf);
+        assertGetGroupsConcurrently(cacheEnabledWithGroupFilter);
     }
 
     private void assertGetGroupsConcurrently(ConfigBuilder configBuilder)
