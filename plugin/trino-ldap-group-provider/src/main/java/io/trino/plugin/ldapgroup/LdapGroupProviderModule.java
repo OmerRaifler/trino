@@ -31,21 +31,16 @@ public class LdapGroupProviderModule
         if (buildConfigObject(LdapGroupProviderConfig.class).getLdapUseGroupFilter()) {
             configBinder(binder).bindConfig(LdapFilteringGroupProviderConfig.class);
             binder.bind(LdapGroupSearcher.class).in(Scopes.SINGLETON);
-            bindLdapGroupResolver(binder, buildConfigObject(LdapFilteringGroupProviderConfig.class));
+            binder.bind(LdapGroupResolver.class).to(switch (buildConfigObject(LdapFilteringGroupProviderConfig.class).getLdapGroupSearchMode()) {
+                case DIRECT -> DirectLdapGroupResolver.class;
+                case RECURSIVE -> RecursiveLdapGroupResolver.class;
+                case MATCHING_RULE_IN_CHAIN -> MatchingRuleInChainLdapGroupResolver.class;
+            }).in(Scopes.SINGLETON);
             binder.bind(GroupProvider.class).to(LdapFilteringGroupProvider.class).in(Scopes.SINGLETON);
         }
         else {
             configBinder(binder).bindConfig(LdapSingleQueryGroupProviderConfig.class);
             binder.bind(GroupProvider.class).to(LdapSingleQueryGroupProvider.class).in(Scopes.SINGLETON);
         }
-    }
-
-    private static void bindLdapGroupResolver(Binder binder, LdapFilteringGroupProviderConfig config)
-    {
-        binder.bind(LdapGroupResolver.class).to(switch (config.getLdapGroupSearchMode()) {
-            case DIRECT -> DirectLdapGroupResolver.class;
-            case RECURSIVE -> RecursiveLdapGroupResolver.class;
-            case MATCHING_RULE_IN_CHAIN -> MatchingRuleInChainLdapGroupResolver.class;
-        }).in(Scopes.SINGLETON);
     }
 }

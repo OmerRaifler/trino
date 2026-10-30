@@ -44,8 +44,8 @@ public class LdapFilteringGroupProvider
     @Inject
     public LdapFilteringGroupProvider(
             LdapClient ldapClient,
-            LdapGroupProviderConfig config,
-            LdapGroupResolver ldapGroupResolver)
+            LdapGroupResolver ldapGroupResolver,
+            LdapGroupProviderConfig config)
     {
         this.ldapClient = requireNonNull(ldapClient, "ldapClient is null");
         this.ldapGroupResolver = requireNonNull(ldapGroupResolver, "ldapGroupResolver is null");

@@ -115,6 +115,7 @@ public class TestLdapGroupProviderIntegration
         openLdapServer.addUserToGroup(bobq, qualityAssurance);
 
         engineering = openLdapServer.createGroup(groupsOU, "engineering");
+        // Nest in both directions so RECURSIVE mode has a cycle to terminate on
         openLdapServer.addUserToGroup(developers, engineering);
         openLdapServer.addUserToGroup(engineering, developers);
     }
@@ -211,19 +212,21 @@ public class TestLdapGroupProviderIntegration
     @Test
     public void testGetGroupsWithBadGroupMemberAttributeReturnsEmpty()
     {
-        Map<String, String> config = ImmutableMap.<String, String>builder()
-                .putAll(baseConfig)
-                .put("ldap.use-group-filter", "true")
-                .put("ldap.group-search-member-attribute", "some-attribute-that-does-not-exist")
-                .put("ldap.group-name-attribute", "cn")
-                .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com")
-                .put("ldap.group-search-mode", "RECURSIVE")
-                .buildOrThrow();
-        GroupProvider groupsProvider = factory.create(config);
+        for (LdapFilteringGroupProviderConfig.LdapGroupSearchMode searchMode : ImmutableList.of(DIRECT, RECURSIVE)) {
+            Map<String, String> config = ImmutableMap.<String, String>builder()
+                    .putAll(baseConfig)
+                    .put("ldap.use-group-filter", "true")
+                    .put("ldap.group-search-member-attribute", "some-attribute-that-does-not-exist")
+                    .put("ldap.group-name-attribute", "cn")
+                    .put("ldap.group-base-dn", "ou=groups,dc=trino,dc=testldap,dc=com")
+                    .put("ldap.group-search-mode", searchMode.name())
+                    .buildOrThrow();
+            GroupProvider groupsProvider = factory.create(config);
 
-        Set<String> groups = groupsProvider.getGroups("alicea");
+            Set<String> groups = groupsProvider.getGroups("alicea");
 
-        assertThat(groups).isEmpty();
+            assertThat(groups).isEmpty();
+        }
     }
 
     @Test
@@ -264,17 +267,17 @@ public class TestLdapGroupProviderIntegration
         CountDownLatch latch = new CountDownLatch(4);
 
         CompletableFuture.supplyAsync(() -> groupsProvider.getGroups("alicea"), executor).whenComplete((g, _) -> {
-            assertThat(g).containsAll(expectedAliceGroups);
+            assertThat(g).isEqualTo(expectedAliceGroups);
             latch.countDown();
         });
 
         CompletableFuture.supplyAsync(() -> groupsProvider.getGroups("bobq"), executor).whenComplete((g, _) -> {
-            assertThat(g).containsAll(ImmutableSet.of("qualityAssurance"));
+            assertThat(g).isEqualTo(ImmutableSet.of("qualityAssurance"));
             latch.countDown();
         });
 
         CompletableFuture.supplyAsync(() -> groupsProvider.getGroups("johnb"), executor).whenComplete((g, _) -> {
-            assertThat(g).containsAll(ImmutableSet.of("clients"));
+            assertThat(g).isEqualTo(ImmutableSet.of("clients"));
             latch.countDown();
         });
 
